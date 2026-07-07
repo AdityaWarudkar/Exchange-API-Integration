@@ -112,84 +112,9 @@ GET    /metrics
 6. `AlertService` publishes order events to Redis and records metrics for Prometheus.
 7. Background market workers broadcast normalized ticker events to `/ws/market`.
 
-## Why These Technologies
 
-- FastAPI: async-first API framework with automatic Swagger docs.
-- SQLAlchemy + Alembic: explicit schema modeling, migrations, and repository-friendly persistence.
-- PostgreSQL: durable relational store for orders, trades, balances, and audit records.
-- Redis Pub/Sub: lightweight event fanout for alerts and operational notifications.
-- httpx + AsyncIO: efficient outbound exchange calls and background streaming loops.
-- JWT + passlib: stateless authentication with hashed passwords.
-- Prometheus + Grafana: metrics collection and dashboard visualization.
-- Docker Compose: one command local environment for API, database, cache, and monitoring.
 
-## Run Locally
 
-```powershell
-copy .env.example .env
-docker compose up --build
-```
-
-Then open:
-
-```text
-API:        http://localhost:8001
-Swagger:    http://localhost:8001/docs
-Prometheus: http://localhost:9091
-Grafana:    http://localhost:3001  (admin/admin)
-Redis:      localhost:6381 -> container port 6379
-```
-
-Run migrations manually:
-
-```powershell
-alembic upgrade head
-```
-
-Run tests:
-
-```powershell
-pip install -e ".[test]"
-pytest
-```
-
-## Example Order
-
-```bash
-curl -X POST http://localhost:8000/order \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"exchange":"paper","symbol":"BTCUSDT","side":"buy","type":"market","quantity":0.01}'
-```
-
-## Screenshots Placeholder
-
-- Swagger UI: `docs/screenshots/swagger.png`
-- Grafana dashboard: `docs/screenshots/grafana.png`
-- WebSocket market stream: `docs/screenshots/websocket.png`
-
-## Resume Mapping
-
-- Built a unified crypto trading backend integrating Binance and Bybit public market APIs behind a common exchange interface.
-- Implemented paper order execution with order lifecycle, trade persistence, virtual balances, position tracking, fees, ROI, and PnL.
-- Designed PostgreSQL schema with Alembic migrations for users, orders, trades, positions, balances, portfolio, alerts, and exchange logs.
-- Added JWT authentication, refresh tokens, password hashing, and role-based access control.
-- Delivered WebSocket market streaming, Redis Pub/Sub alerts, background workers, Prometheus metrics, and Grafana dashboard support.
-- Containerized the full stack with Docker Compose for FastAPI, Postgres, Redis, Prometheus, and Grafana.
-
-## Interview Questions And Answers
-
-Q: Why use a unified exchange interface?
-A: It isolates exchange-specific response formats and lets the application work with normalized methods such as `get_ticker`, `place_order`, and `get_positions`.
-
-Q: Why is order execution paper-only?
-A: It prevents accidental real-money trading while still exercising realistic order lifecycle, fills, fees, positions, and portfolio calculations.
-
-Q: How do you handle exchange instability?
-A: Exchange calls are async, wrapped with retry-friendly service boundaries and a circuit breaker. Market workers reconnect with backoff and publish alerts.
-
-Q: How would this scale?
-A: Split market data, order execution, portfolio, and alerting into separate services; move events to Kafka; shard hot order tables; add exchange credential vaulting; and run WebSocket broadcasters horizontally.
 
 ## Future Improvements
 
